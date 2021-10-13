@@ -8,4 +8,10 @@ python driver.py
 ```
 
 ## Dependencies
-TODO
+TODO: add env .yml file
+```angular2html
+python 3.8 (Haven't tried it with different versions)
+numpy
+pytorch
+matplotlib
+```
