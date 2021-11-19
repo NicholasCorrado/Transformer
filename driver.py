@@ -2,7 +2,7 @@ from model import make_model, train
 from plot import visualize_all_curves
 
 if __name__ == "__main__":
-    V = 11
+    V = 100+1
 
     print('Creating models...')
 

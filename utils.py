@@ -26,6 +26,7 @@ class Batch:
 
         self.src = self.src.type(torch.int64)
         self.trg = self.trg.type(torch.int64)
+        self.num_sentences = len(self.src)
 
 
     @staticmethod
