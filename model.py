@@ -108,18 +108,22 @@ def batch_data():
     energy_data = energy_data[:1000]
 
     pp = PricePreprocessor(stock_prices=energy_data, vocab_size=100)
-    sentences, target_words = pp.get_rolling_window_sentences(window_length=50)
-    sentences = torch.from_numpy(sentences).type(torch.int64)
-    target_words = torch.from_numpy(target_words).type(torch.int64)
+    sentences, target_words = pp.get_rolling_window_sentences(window_length=100)
 
     n = len(sentences)
+    perm = np.random.permutation(n)
+    sentences = sentences[perm]
+    target_words = target_words[perm]
+
+    sentences = torch.from_numpy(sentences).type(torch.int64)
+    target_words = torch.from_numpy(target_words).type(torch.int64)
 
     # Use last 10% of data for testing
     n_train = int(n*0.90)
     n_test = n-n_train
 
     sentence_length = 50
-    batch_size = 10
+    batch_size = 50
     n_train_batches = math.ceil(n_train/batch_size)
     n_test_batches = math.ceil((n-n_train)/batch_size)
 
@@ -200,10 +204,12 @@ def train(model):
 
     for epoch in range(20):
         model.train() # set weights to training mode
-        train_loss_avg = run_epoch(data_gen_2(train_batches[:10]), model,
+        print('Training epoch...')
+        train_loss_avg = run_epoch(data_gen_2(train_batches), model,
                                    SimpleLossCompute(model.generator, criterion, model_opt))
         model.eval()
-        val_loss_avg = run_epoch(data_gen_2(test_batches[:10]), model,
+        print('Validation epoch...')
+        val_loss_avg = run_epoch(data_gen_2(test_batches), model,
                                  SimpleLossCompute(model.generator, criterion, None))
 
         # train_loss_avg = run_epoch(data_gen(11, 30, 20), model,
