@@ -122,8 +122,8 @@ class PricePreprocessor:
             print('Truncating data at first NaN...')
             nan_index = np.where(np.isnan(self.log_prices))[0][0]
             self.log_prices = self.log_prices[:nan_index]
-        self.max_log_price = max(stock_prices)
-        self.min_log_price = min(stock_prices)
+        self.max_log_price = max(self.log_prices)
+        self.min_log_price = min(self.log_prices)
         self.vocab_size = vocab_size
 
         # bins[i] = right endpoint of bin
@@ -131,7 +131,7 @@ class PricePreprocessor:
         self.bins = np.empty(vocab_size+1)
         self.bin_width = (self.max_log_price - self.min_log_price) / self.vocab_size
         for i in range(vocab_size):
-            self.bins[i] = self.bin_width*i
+            self.bins[i] = self.min_log_price + self.bin_width*i
 
         self.bins[-1] = self.max_log_price
         self.bins = np.concatenate((self.bins, [np.inf]))
