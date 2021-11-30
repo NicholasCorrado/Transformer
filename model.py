@@ -105,28 +105,26 @@ def data_gen_2(batches):
 def batch_data():
 
     energy_data, energy_data_col_names = get_stock_data(file_path="data/energydata.csv")
-    energy_data = energy_data[:1000]
+    # energy_data = energy_data[:1000]
 
-    pp = PricePreprocessor(stock_prices=energy_data, vocab_size=100)
-    sentences, target_words = pp.get_rolling_window_sentences(window_length=100)
+    pp = PricePreprocessor(stock_prices=energy_data, vocab_size=10)
+    sentences, target_words = pp.get_rolling_window_sentences(window_length=10)
 
-    n = len(sentences)
-    perm = np.random.permutation(n)
+    perm = np.random.permutation(len(sentences))[:20]
+    perm = np.arange(20)
     sentences = sentences[perm]
     target_words = target_words[perm]
 
+    n = len(sentences)
+    batch_size = 2
+
+    n_train = int(n*0.80)
+    n_test = n-n_train
+    n_train_batches = math.ceil(n_train/batch_size)
+    n_test_batches = math.ceil((n_test)/batch_size)
+
     sentences = torch.from_numpy(sentences).type(torch.int64)
     target_words = torch.from_numpy(target_words).type(torch.int64)
-
-    # Use last 10% of data for testing
-    n_train = int(n*0.90)
-    n_test = n-n_train
-
-    sentence_length = 50
-    batch_size = 50
-    n_train_batches = math.ceil(n_train/batch_size)
-    n_test_batches = math.ceil((n-n_train)/batch_size)
-
 
     train_batches = []
     test_batches = []
@@ -170,13 +168,15 @@ def run_epoch(data_iter, model, loss_compute):
     total_loss = 0
     tokens = 0
     for i, batch in enumerate(data_iter):
+        print('batch num:', i)
+        if i==20:
+            stop = 0
         out = model.forward(batch.src, batch.trg,
                             batch.src_mask, batch.trg_mask)
         loss = loss_compute(out, batch.trg_y, batch.ntokens)
         total_loss += loss
         total_tokens += batch.ntokens
         tokens += batch.ntokens
-        print('batch num:', i)
         # if i % 50 == 1:
         #     elapsed = time.time() - start
         #     print("Epoch Step: %d Loss: %f Tokens per Sec: %f" %
@@ -190,7 +190,7 @@ def SquaredLoss(x, target):
 
 def train(model):
     # Train the simple copy task.
-    criterion = LabelSmoothing(size=101, padding_idx=0, smoothing=0.0)
+    criterion = LabelSmoothing(size=11, padding_idx=0, smoothing=0.0)
     # criterion = SquaredLoss()
     # model = make_model(V, V, N=2)
     model_opt = NoamOpt(model.src_embed[0].d_model, 1, 400,
@@ -202,7 +202,7 @@ def train(model):
     train_batches, test_batches = batch_data()
     d = data_gen(11, 30, 20)
 
-    for epoch in range(20):
+    for epoch in range(1):
         model.train() # set weights to training mode
         print('Training epoch...')
         train_loss_avg = run_epoch(data_gen_2(train_batches), model,

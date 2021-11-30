@@ -118,7 +118,7 @@ class PricePreprocessor:
     def __init__(self, stock_prices, vocab_size=1000):
         self.log_prices = np.log(stock_prices)
         if np.any(np.isnan(self.log_prices)):
-            print('ERROR: log_prices conains NaN. An entry from the data is probably missing and set to -1.')
+            print('WARNING: log_prices conains NaN. An entry from the data is probably missing and set to -1.')
             print('Truncating data at first NaN...')
             nan_index = np.where(np.isnan(self.log_prices))[0][0]
             self.log_prices = self.log_prices[:nan_index]
@@ -127,14 +127,11 @@ class PricePreprocessor:
         self.vocab_size = vocab_size
 
         # bins[i] = right endpoint of bin
-        # e.g. bins = [0, 0.5, 1] for bins [0, 0.5], [0.5, 1]
-        self.bins = np.empty(vocab_size+1)
+        # e.g. bins = [0.5, 1] for bins [0, 0.5], [0.5, 1]
+        self.bins = np.empty(vocab_size)
         self.bin_width = (self.max_log_price - self.min_log_price) / self.vocab_size
         for i in range(vocab_size):
-            self.bins[i] = self.min_log_price + self.bin_width*i
-
-        self.bins[-1] = self.max_log_price
-        self.bins = np.concatenate((self.bins, [np.inf]))
+            self.bins[i] = self.min_log_price + self.bin_width*(i+1)
 
         self.n = len(self.log_prices)
         self.word_indices = self.map_log_prices_to_word_index(self.log_prices)
@@ -175,7 +172,7 @@ class PricePreprocessor:
         '''
         output = np.zeros(len(input_sentence))
         for i in range(len(input_sentence)):
-            output[i] = np.where(input_sentence[i] < self.bins)[0][0] - 1
+            output[i] = np.where(input_sentence[i] <= self.bins)[0][0] - 1
         return output
 
 if __name__ == "__main__":
