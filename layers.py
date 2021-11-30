@@ -172,7 +172,7 @@ class PricePreprocessor:
         '''
         output = np.zeros(len(input_sentence))
         for i in range(len(input_sentence)):
-            output[i] = np.where(input_sentence[i] <= self.bins)[0][0] - 1
+            output[i] = np.where(input_sentence[i] <= self.bins)[0][0]
         return output
 
 if __name__ == "__main__":
