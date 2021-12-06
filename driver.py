@@ -218,7 +218,7 @@ def run_epoch(data_iter, model, loss_compute):
         total_loss += loss
         total_tokens += batch.ntokens
         tokens += batch.ntokens
-        if i % 50 == 1:
+        if i % 50 == 0:
             elapsed = time.time() - start
             print("Epoch Step: %d Loss: %f Tokens per Sec: %f" %
                     (i, loss / batch.ntokens, tokens / elapsed))
@@ -301,6 +301,8 @@ if __name__ == "__main__":
 
     save_dir = f'./results/{prefix}/'
 
+    if not os.path.isdir('./results/'):
+        os.mkdir('./results/')
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
 
