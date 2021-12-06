@@ -133,6 +133,7 @@ class PricePreprocessor:
         for i in range(vocab_size):
             self.bins[i] = self.min_log_price + self.bin_width*(i+1)
 
+        self.bins[-1] = np.inf
         self.n = len(self.log_prices)
         self.word_indices = self.map_log_prices_to_word_index(self.log_prices)
 
@@ -172,6 +173,8 @@ class PricePreprocessor:
         '''
         output = np.zeros(len(input_sentence))
         for i in range(len(input_sentence)):
+            if len(np.where(input_sentence[i] <= self.bins)[0]) == 0:
+                stop = 0
             output[i] = np.where(input_sentence[i] <= self.bins)[0][0]
         return output
 
