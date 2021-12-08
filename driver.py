@@ -271,6 +271,8 @@ if __name__ == "__main__":
     parser.add_argument("--num-epochs", "-n", type=int, default=2)
 
     parser.add_argument("--data-source", type=str, default='energy')
+    parser.add_argument("--stock-name", type=str, default='APA')
+
 
     args = parser.parse_args()
 
@@ -311,7 +313,7 @@ if __name__ == "__main__":
     model = make_model(args.vocab_size, args.vocab_size, N=args.num_encoder_layers, encoding_mode=encoding_mode, combining_mode=combining_mode, max_wavelength=10000)
 
     print('Fetching data...')
-    stock_data_1, stock_data_2 = get_stock_data('./data/energy_pruned.npy', './data/energy_pruned_names.npy', 'APA', None)
+    stock_data_1, stock_data_2 = get_stock_data('./data/energy_pruned.npy', './data/energy_pruned_names.npy', args.stock_name, None)
     data_batches = batch_data_price_prediction(stock_data_1, vocab_size=args.vocab_size, batch_size=args.batch_size)
 
     print('Starting Training...')
