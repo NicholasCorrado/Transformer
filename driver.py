@@ -26,6 +26,7 @@ import argparse
 
 # Subset of S&P 500 constituents for which we have data for all dates from 1/3/2007 - 10/8/2021
 SP500_CONSTITUENTS = ['APA', 'BKR', 'COP', 'CTRA', 'CVX', 'DVN', 'EOG', 'HAL', 'HES', 'MRO', 'OXY', 'PXD', 'SLB', 'VLO', 'XOM']
+DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 def make_model(src_vocab,
                tgt_vocab,
@@ -126,8 +127,8 @@ def batch_data_price_prediction(stock_data, vocab_size, batch_size=64, window_le
     n_train_batches = math.ceil(n_train/batch_size)
     n_test_batches = math.ceil((n_test)/batch_size)
 
-    sentences = torch.from_numpy(sentences).type(torch.int64)
-    target_words = torch.from_numpy(target_words).type(torch.int64)
+    sentences = torch.from_numpy(sentences).type(torch.int64).to(DEVICE)
+    target_words = torch.from_numpy(target_words).type(torch.int64).to(DEVICE)
 
     train_batches = []
     test_batches = []
@@ -301,6 +302,8 @@ if __name__ == "__main__":
 
     save_dir = f'./results/{prefix}/'
 
+    if not os.path.isdir('./results/'):
+        os.mkdir('./results/')
     if not os.path.isdir(save_dir):
         os.mkdir(save_dir)
 
