@@ -4,6 +4,7 @@ import torch
 from torch import nn
 from torch.autograd import Variable
 
+DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
 class PositionalEncoding_v2(nn.Module):
     "Implement the PE function."
@@ -22,7 +23,7 @@ class PositionalEncoding_v2(nn.Module):
         self.at = nn.Tanh()
         if encoding_mode == 'sinusoidal':
             # Compute the positional encodings once in log space.
-            self.pe = torch.zeros(max_len, d_model)
+            self.pe = torch.zeros(max_len, d_model).to(DEVICE)
             position = torch.arange(0, max_len).unsqueeze(1)
             div_term = torch.exp(torch.arange(0, d_model, 2) *
                                  -(math.log(max_wavelength) / d_model))

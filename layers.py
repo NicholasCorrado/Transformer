@@ -9,6 +9,8 @@ import torch.nn.functional as F
 from utils import clones
 
 
+DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+
 class LayerNorm(nn.Module):
     "Construct a layernorm module (See citation for details)."
     def __init__(self, features, eps=1e-6):

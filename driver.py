@@ -292,7 +292,7 @@ if __name__ == "__main__":
         os.mkdir(save_dir)
 
     print('Creating model...')
-    model = make_model(args.vocab_size, args.vocab_size, N=args.num_encoder_layers, encoding_mode=encoding_mode, combining_mode=combining_mode, max_wavelength=10000)
+    model = make_model(args.vocab_size, args.vocab_size, N=args.num_encoder_layers, encoding_mode=encoding_mode, combining_mode=combining_mode, max_wavelength=10000).to(DEVICE)
 
     print('Fetching data...')
     stock_data_1, stock_data_2 = get_stock_data('./data/energy_pruned.npy', './data/energy_pruned_names.npy', args.stock_name, None)
