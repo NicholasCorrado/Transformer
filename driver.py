@@ -2,6 +2,7 @@ import os.path
 import time
 
 import torch
+from torch.utils.data import TensorDataset, DataLoader
 
 from plot import visualize_all_curves
 
@@ -107,18 +108,22 @@ def copy_task_data_gen(V, batch, nbatches):
         tgt = Variable(data, requires_grad=False)
         yield Batch(src, tgt, 0)
 
-def yield_batch(batches):
-    for i in range(len(batches)):
-        yield batches[i]
+# def yield_batch(batches):
+#     for i in range(len(batches)):
+#         batches[i].src.to(DEVICE)
+#         yield batches[i]
+
+def yield_batch(dl_src, dl_trg):
+    for (src, trg) in zip(dl_src, dl_trg):
+        src = src[0].to(DEVICE)
+        trg = trg[0].to(DEVICE)
+        yield Batch(src, trg)
 
 def batch_data_price_prediction(stock_data, vocab_size, batch_size=64, window_length=50):
 
     pp = PricePreprocessor(stock_prices=stock_data, vocab_size=vocab_size)
     sentences, target_words = pp.get_rolling_window_sentences(window_length=window_length)
 
-    perm = np.random.permutation(len(sentences))
-    sentences = sentences[perm]
-    target_words = target_words[perm]
     print(np.min(sentences), np.max(sentences))
 
     n = len(sentences)
@@ -127,47 +132,20 @@ def batch_data_price_prediction(stock_data, vocab_size, batch_size=64, window_le
     n_train_batches = math.ceil(n_train/batch_size)
     n_test_batches = math.ceil((n_test)/batch_size)
 
-    sentences = torch.from_numpy(sentences).type(torch.int64).to(DEVICE)
-    target_words = torch.from_numpy(target_words).type(torch.int64).to(DEVICE)
-
-    train_batches = []
-    test_batches = []
-
-    for i in range(n_train_batches):
-        start = i*batch_size
-        end = (i+1)*batch_size
-        src = sentences[start:end]
-        trg = target_words[start:end]
-        train_batches.append(Batch(src, trg))
-    for i in range(n_test_batches):
-        start = n_train+i*batch_size
-        end = n_train+(i+1)*batch_size
-        src = sentences[start:end]
-        trg = target_words[start:end]
-        test_batches.append(Batch(src, trg))
-
-    return train_batches, test_batches
-
-def batch_data_price_translation(stock_data_1, stock_data_2, vocab_size, batch_size=64, window_length=50):
-
-    pp = PricePreprocessor(stock_prices=stock_data_1, vocab_size=vocab_size)
-
-    sentences, target_words = pp.get_rolling_window_sentences(window_length=window_length)
-
-    perm = np.random.permutation(len(sentences))
-    sentences = sentences[perm]
-    target_words = target_words[perm]
-    print(np.min(sentences), np.max(sentences))
-
-    n = len(sentences)
-    n_train = int(n*0.80)
-    n_test = n-n_train
-    n_train_batches = math.ceil(n_train/batch_size)
-    n_test_batches = math.ceil((n_test)/batch_size)
+    perm = np.random.permutation(n_train)
+    sentences[np.arange(n_train)] = sentences[perm]
+    target_words[np.arange(n_train)] = target_words[perm]
 
     sentences = torch.from_numpy(sentences).type(torch.int64)
     target_words = torch.from_numpy(target_words).type(torch.int64)
 
+    ds_src = TensorDataset(sentences)
+    dl_src = DataLoader(ds_src, batch_size=2)
+
+    ds_trg = TensorDataset(target_words)
+    dl_trg = DataLoader(ds_trg, batch_size=2)
+
+
     train_batches = []
     test_batches = []
 
@@ -184,7 +162,11 @@ def batch_data_price_translation(stock_data_1, stock_data_2, vocab_size, batch_s
         trg = target_words[start:end]
         test_batches.append(Batch(src, trg))
 
-    return train_batches, test_batches
+    return train_batches, test_batches, dl_src, dl_trg
+
+def batch_data_price_translation(stock_data_1, stock_data_2, vocab_size, batch_size=64, window_length=50):
+
+    pass
 
 def get_stock_data(path_data, path_names, stock_name_1, stock_name_2):
     # TODO: need to properly read date column
@@ -235,23 +217,23 @@ def train(model, data_batches, vocab_size, num_epochs):
     train_loss_avg_list = []
     val_loss_avg_list = []
 
-    train_batches, test_batches = data_batches
+    dl_src, dl_trg = data_batches
 
     for epoch in range(num_epochs):
         model.train() # set weights to training mode
         print('Training epoch...')
-        train_loss_avg = run_epoch(yield_batch(train_batches), model,
+        train_loss_avg = run_epoch(yield_batch(dl_src, dl_trg), model,
                                    SimpleLossCompute(model.generator, criterion, model_opt))
         model.eval()
-        print('Validation epoch...')
-        val_loss_avg = run_epoch(yield_batch(test_batches), model,
-                                 SimpleLossCompute(model.generator, criterion, None))
-
-        val_loss_avg = float(val_loss_avg)
-        print('Epoch: %i   Training Loss: %f   Validation Loss: %f' % (epoch, train_loss_avg, val_loss_avg))
+        # print('Validation epoch...')
+        # val_loss_avg = run_epoch(yield_batch(test_batches), model,
+        #                          SimpleLossCompute(model.generator, criterion, None))
+        #
+        # val_loss_avg = float(val_loss_avg)
+        # print('Epoch: %i   Training Loss: %f   Validation Loss: %f' % (epoch, train_loss_avg, val_loss_avg))
 
         train_loss_avg_list.append(train_loss_avg)
-        val_loss_avg_list.append(val_loss_avg)
+        # val_loss_avg_list.append(val_loss_avg)
     return train_loss_avg_list, val_loss_avg_list
 
 def save_model(encoder_decoder, path):
@@ -314,10 +296,10 @@ if __name__ == "__main__":
 
     print('Fetching data...')
     stock_data_1, stock_data_2 = get_stock_data('./data/energy_pruned.npy', './data/energy_pruned_names.npy', args.stock_name, None)
-    data_batches = batch_data_price_prediction(stock_data_1, vocab_size=args.vocab_size, batch_size=args.batch_size)
+    train_batches, val_batches, dl_src, dl_trg = batch_data_price_prediction(stock_data_1, vocab_size=args.vocab_size, batch_size=args.batch_size)
 
     print('Starting Training...')
-    train_loss, val_loss = train(model, data_batches, vocab_size=args.vocab_size, num_epochs=args.num_epochs)
+    train_loss, val_loss = train(model, (dl_src, dl_trg), vocab_size=args.vocab_size, num_epochs=args.num_epochs)
 
     print('Staving results...')
     np.save(save_dir + 'train_loss', np.array(train_loss))
