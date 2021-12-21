@@ -4,15 +4,19 @@ We use the code from [here](https://github.com/harvardnlp/annotated-transformer)
 
 This repo has two sections. Code for the language translation task is found in the `ipynb` directory. The rest of the repo is for the stock translation and sentence completion tasks. There are separate installation instructions for both applications.
 
+We have only tested on CSL Linux machines, and do not guarantee support for other platforms.
+
 ## Concat Transformer: Financial Market Application
 ### Installation
 ```
 conda env create --file environment.yml
+conda install pytorch cudatoolkit=10.2 -c pytorch
 ```
 
-### Replicating Results
+### Data
+Stock price data is in the `data` directory as `.npy` files.
 
-We have only tested on CSL Linux machines, and do not guarantee support for other platforms.
+### Replicating Results
 
 To run all experiments for the stock translation task:
 ```angular2html
