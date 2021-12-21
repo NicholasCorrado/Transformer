@@ -1,0 +1,12 @@
+name: latent
+channels:
+  - defaults
+dependencies:
+  - python=3.8
+  - cudatoolkit=10.2
+  - numpy
+  - notebook
+  - seaborn
+  - spacy
+  - ipywidgets
+prefix: /u/c/o/corrado/anaconda3/envs/latent
