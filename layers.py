@@ -133,6 +133,7 @@ class PricePreprocessor:
         for i in range(vocab_size):
             self.bins[i] = self.min_log_price + self.bin_width*(i+1)
 
+
         self.bins[-1] = np.inf
         self.n = len(self.log_prices_1)
         self.word_indices_1 = self.map_log_prices_to_word_index(self.log_prices_1)        
@@ -206,7 +207,7 @@ class PricePreprocessorTranslation:
         sentences_1 = np.array(sentences_1)
         sentences_2 = np.array(sentences_2)
         return sentences_1, sentences_2
-    
+
     def map_log_prices_to_word_index(self, input_sentence):
         '''
         input_prices: 1D array of dim (sentence_length=50) containing log prices in batch_dim sentences
