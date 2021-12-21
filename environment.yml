@@ -1,4 +1,4 @@
-name: latent
+name: transformer
 channels:
   - defaults
 dependencies:
@@ -9,4 +9,3 @@ dependencies:
   - seaborn
   - spacy
   - ipywidgets
-prefix: /u/c/o/corrado/anaconda3/envs/latent
