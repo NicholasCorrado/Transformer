@@ -3,7 +3,7 @@ import math
 import torch
 from torch import nn
 from torch.autograd import Variable
-
+from global_vars import DEVICE 
 
 class PositionalEncoding_v2(nn.Module):
     "Implement the PE function."
@@ -22,7 +22,7 @@ class PositionalEncoding_v2(nn.Module):
         self.at = nn.Tanh()
         if encoding_mode == 'sinusoidal':
             # Compute the positional encodings once in log space.
-            self.pe = torch.zeros(max_len, d_model)
+            self.pe = torch.zeros(max_len, d_model).to(DEVICE)
             position = torch.arange(0, max_len).unsqueeze(1)
             div_term = torch.exp(torch.arange(0, d_model, 2) *
                                  -(math.log(max_wavelength) / d_model))
@@ -33,6 +33,7 @@ class PositionalEncoding_v2(nn.Module):
             self.pe = nn.Parameter(torch.zeros(max_len, d_model).unsqueeze(0),
                               requires_grad=True)
         else:
+            print(encoding_mode)
             raise NotImplementedError()
     def forward(self, x):
         if self.combining_mode == 'add':
@@ -55,4 +56,5 @@ class PositionalEncoding_v2(nn.Module):
                 x = self.at(self.de(x))
                 return self.dropout(x)
         else:
+            print(encoding_mode)
             raise NotImplementedError()

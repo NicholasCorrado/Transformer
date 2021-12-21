@@ -9,10 +9,7 @@ if __name__ == "__main__":
     sns.set_theme()
     
     suffix_list = [
-                   'APA_AAPL', 'CVX_AAPL', 'MRO_AAPL',
-                   'AAPL_APA', 'AAPL_CVX', 'AAPL_MRO', 
-                   'XOM_ADBE', 'XOM_GOOGL', 'XOM_MSI',
-                   'GOOGL_XOM', 'ADBE_XOM', 'MSI_XOM',
+                   'APA', 'CVX', 'MRO', 'XOM'
                                                         ]
     
     for suffix in suffix_list:
@@ -27,10 +24,10 @@ if __name__ == "__main__":
     #         lc_train = np.load(f'./results_{suffix}/lc/train_loss.npy', allow_pickle=True)
                   
             print('loading validation loss...')
-            sa_val = np.load(f'./trial_{i}/results_{suffix}/sa/val_loss.npy', allow_pickle=True)
-            sc_val = np.load(f'./trial_{i}/results_{suffix}/sc/val_loss.npy', allow_pickle=True)
-            la_val = np.load(f'./trial_{i}/results_{suffix}/la/val_loss.npy', allow_pickle=True)
-            lc_val = np.load(f'./trial_{i}/results_{suffix}/lc/val_loss.npy', allow_pickle=True)
+            sa_val = np.load(f'./results_{i}/results_{suffix}/sa/val_loss.npy', allow_pickle=True)
+            sc_val = np.load(f'./results_{i}/results_{suffix}/sc/val_loss.npy', allow_pickle=True)
+            la_val = np.load(f'./results_{i}/results_{suffix}/la/val_loss.npy', allow_pickle=True)
+            lc_val = np.load(f'./results_{i}/results_{suffix}/lc/val_loss.npy', allow_pickle=True)
 
             sa.append(sa_val)
             sc.append(sc_val)
@@ -77,6 +74,15 @@ if __name__ == "__main__":
         plt.ylabel('Loss')
         plt.yscale('log')
         plt.legend()
+        
+        print(suffix)
+        print('avg:', sa_mean[-1], sc_mean[-1], la_mean[-1], lc_mean[-1])
+        print('std:', sa_std[-1], sc_std[-1], la_std[-1], lc_std[-1])
+                
 
         # plt.show()
         plt.savefig(f'fig_{suffix}')
+        
+#         fig = plt.figure(figsize=(5,5))
+#         plt.errorbar([ sa_mean[-1], sc_mean[-1], la_mean[-1], lc_mean[-1]], yerr=[sa_std[-1], sc_std[-1], la_std[-1], lc_std[-1]])
+        
