@@ -7,9 +7,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 from utils import clones
-
-
-DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+from global_vars import DEVICE 
 
 class LayerNorm(nn.Module):
     "Construct a layernorm module (See citation for details)."
@@ -117,15 +115,15 @@ class Embeddings(nn.Module):
         return self.lut(x) * math.sqrt(self.d_model)
 
 class PricePreprocessor:
-    def __init__(self, stock_prices, vocab_size=1000):
-        self.log_prices = np.log(stock_prices)
-        if np.any(np.isnan(self.log_prices)):
+    def __init__(self, stock_prices_1, stock_prices_2=None, vocab_size=1000):
+        self.log_prices_1 = np.log(stock_prices_1)
+        if np.any(np.isnan(self.log_prices_1)):
             print('WARNING: log_prices conains NaN. An entry from the data is probably missing and set to -1.')
             print('Truncating data at first NaN...')
             nan_index = np.where(np.isnan(self.log_prices))[0][0]
-            self.log_prices = self.log_prices[:nan_index]
-        self.max_log_price = max(self.log_prices)
-        self.min_log_price = min(self.log_prices)
+            self.log_prices_1 = self.log_prices[:nan_index]
+        self.max_log_price = np.max(self.log_prices_1)
+        self.min_log_price = np.min(self.log_prices_1)
         self.vocab_size = vocab_size
 
         # bins[i] = right endpoint of bin
@@ -136,37 +134,20 @@ class PricePreprocessor:
             self.bins[i] = self.min_log_price + self.bin_width*(i+1)
 
         self.bins[-1] = np.inf
-        self.n = len(self.log_prices)
-        self.word_indices = self.map_log_prices_to_word_index(self.log_prices)
+        self.n = len(self.log_prices_1)
+        self.word_indices_1 = self.map_log_prices_to_word_index(self.log_prices_1)        
 
     def get_rolling_window_sentences(self, window_length=50):
 
-        # Sanity check
-        # num_sentences = len(self.log_prices) - window_length + 1
-        #
-        # sentences = [self.log_prices[i:i+window_length] for i in range(num_sentences)]
-        # target_words = [self.log_prices[i+window_length-1] for i in range(num_sentences)]
-        #
-        # sentences = np.array(sentences)
-        # target_words = np.array(target_words)
-        #
-        # for i in range(num_sentences):
-        #     assert np.allclose(sentences[i][-1], target_words[i])
+        num_sentences = len(self.word_indices_1) - 2*window_length + 1
 
-        num_sentences = len(self.word_indices) - window_length + 1
+        sentences_1 = [self.word_indices_1[i:i+window_length] for i in range(num_sentences)]
+        sentences_2 = [self.word_indices_1[i+window_length:i+2*window_length] for i in range(num_sentences)]
 
-        sentences = [self.word_indices[i:i+window_length] for i in range(num_sentences)]
-        target_words = [self.word_indices[i + window_length - 1] for i in range(num_sentences)]
-
-        target_words_one_hot = np.zeros(shape=(num_sentences, self.vocab_size))
-
-        for i in range(num_sentences):
-            target_index = int(target_words[i])
-            target_words_one_hot[i][target_index] = 1
-
-        sentences = np.array(sentences)
-
-        return sentences, target_words_one_hot
+        sentences_1 = np.array(sentences_1)
+        sentences_2 = np.array(sentences_2)
+        
+        return sentences_1, sentences_2
 
     def map_log_prices_to_word_index(self, input_sentence):
         '''
@@ -180,6 +161,64 @@ class PricePreprocessor:
             output[i] = np.where(input_sentence[i] <= self.bins)[0][0]
         return output
 
+    
+    
+class PricePreprocessorTranslation:
+    def __init__(self, stock_prices_1, stock_prices_2=None, vocab_size=1000):
+        self.log_prices_1 = np.log(stock_prices_1)
+        self.log_prices_2 = np.log(stock_prices_2)
+        
+        if np.any(np.isnan(self.log_prices_1)):
+            print('WARNING: log_prices conains NaN. An entry from the data is probably missing and set to -1.')
+            print('Truncating data at first NaN...')
+            nan_index = np.where(np.isnan(self.log_prices))[0][0]
+            self.log_prices_1 = self.log_prices[:nan_index]
+        max_1 = np.max(self.log_prices_1)
+        max_2 = np.max(self.log_prices_2)
+        print(max_1, max_2)
+        self.max_log_price = max(max_1, max_2)
+        min_1 = np.min(self.log_prices_1)
+        min_2 = np.min(self.log_prices_2)
+        self.min_log_price = min(min_1, min_2)    
+        
+        self.vocab_size = vocab_size
+
+        # bins[i] = right endpoint of bin
+        # e.g. bins = [0.5, 1] for bins [0, 0.5], [0.5, 1]
+        self.bins = np.empty(vocab_size)
+        self.bin_width = (self.max_log_price - self.min_log_price) / self.vocab_size
+        for i in range(vocab_size):
+            self.bins[i] = self.min_log_price + self.bin_width*(i+1)
+
+        self.bins[-1] = np.inf
+        self.n = len(self.log_prices_1)
+        self.word_indices_1 = self.map_log_prices_to_word_index(self.log_prices_1)  
+        self.word_indices_2 = self.map_log_prices_to_word_index(self.log_prices_2) 
+        
+
+    def get_rolling_window_sentences(self, window_length=50):
+
+        num_sentences = len(self.word_indices_1) - window_length + 1
+
+        sentences_1 = [self.word_indices_1[i:i+window_length] for i in range(num_sentences)]
+        sentences_2 = [self.word_indices_2[i:i+window_length] for i in range(num_sentences)]
+
+        sentences_1 = np.array(sentences_1)
+        sentences_2 = np.array(sentences_2)
+        return sentences_1, sentences_2
+    
+    def map_log_prices_to_word_index(self, input_sentence):
+        '''
+        input_prices: 1D array of dim (sentence_length=50) containing log prices in batch_dim sentences
+        output: 1D array of dim (sentence_length=50) containing indices corresponding to the original log prices
+        '''
+        output = np.zeros(len(input_sentence))
+        for i in range(len(input_sentence)):
+            if len(np.where(input_sentence[i] <= self.bins)[0]) == 0:
+                stop = 0
+            output[i] = np.where(input_sentence[i] <= self.bins)[0][0]
+        return output
+    
 if __name__ == "__main__":
     prices = np.arange(10)
 

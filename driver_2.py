@@ -180,8 +180,8 @@ def get_stock_data(stock_name_1, stock_name_2):
     path_data_1 = './data/energy_pruned.npy'
     path_names_1 = './data/energy_pruned_names.npy'
     
-    path_data_2 = './data/tech_pruned.npy'
-    path_names_2 = './data/tech_pruned_names.npy'
+    path_data_2 = './data/energy_pruned.npy'
+    path_names_2 = './data/energy_pruned_names.npy'
     
     data_1 = np.load(path_data_1)
     names_1 = np.load(path_names_1)
@@ -271,7 +271,7 @@ if __name__ == "__main__":
     parser.add_argument("--save-dir", type=str, default='results')
     parser.add_argument("--data-source", type=str, default='energy')
     parser.add_argument("--stock-name-1", type=str, default='APA')
-    parser.add_argument("--stock-name-2", type=str, default='BKR')
+    parser.add_argument("--stock-name-2", type=str, default=None)
     parser.add_argument("--energy-to-tech", type=int, default=1)
     parser.add_argument("--gpu-idx", type=int, default=0) 
 

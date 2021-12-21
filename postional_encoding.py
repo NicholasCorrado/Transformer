@@ -3,8 +3,7 @@ import math
 import torch
 from torch import nn
 from torch.autograd import Variable
-
-DEVICE = 'cuda:0' if torch.cuda.is_available() else 'cpu'
+from global_vars import DEVICE 
 
 class PositionalEncoding_v2(nn.Module):
     "Implement the PE function."
@@ -34,6 +33,7 @@ class PositionalEncoding_v2(nn.Module):
             self.pe = nn.Parameter(torch.zeros(max_len, d_model).unsqueeze(0),
                               requires_grad=True)
         else:
+            print(encoding_mode)
             raise NotImplementedError()
     def forward(self, x):
         if self.combining_mode == 'add':
@@ -56,4 +56,5 @@ class PositionalEncoding_v2(nn.Module):
                 x = self.at(self.de(x))
                 return self.dropout(x)
         else:
+            print(encoding_mode)
             raise NotImplementedError()
