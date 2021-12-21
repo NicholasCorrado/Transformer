@@ -2,19 +2,27 @@
 
 We use the code from [here](https://github.com/harvardnlp/annotated-transformer) as the foundation for this codebase.
 
-Running:
-```angular2html
-python driver.py
+## Financial Market Application
+### Installation
+```
+conda env create --file environment.yml
 ```
 
-## Dependencies
-TODO: add env .yml file
+### Replicating Results
+
+We have only tested on CSL Linux machines, and do not guarantee support for other platforms.
+
+To run all experiments for the stock translation task:
 ```angular2html
-python 3.8 (Haven't tried it with different versions)
-numpy
-pytorch
-matplotlib
+./run.sh
 ```
+After running, you can run `python plot.py` to plot loss curves.
+
+To run all experiments for the stock sentence completion task:
+```angular2html
+./run_2.sh
+```
+After running, you can run `python plot_2.py` to plot loss curves.
 
 ## Getting the datasets
 From a comment in the 
