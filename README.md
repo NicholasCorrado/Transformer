@@ -2,6 +2,8 @@
 
 We use the code from [here](https://github.com/harvardnlp/annotated-transformer) as the foundation for this codebase.
 
+This repo has two sections. Code for the language translation task is found in the `ipynb` directory. The rest of the repo is for the stock translation and sentence completion tasks. There are separate installation instructions for both applications.
+
 ## Concat Transformer: Financial Market Application
 ### Installation
 ```
